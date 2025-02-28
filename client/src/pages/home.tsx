@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LocationSearch } from "@/components/location-search";
 import { MapView } from "@/components/map-view";
 import { PoiList } from "@/components/poi-list";
+import { CarCollision } from "@/components/car-collision";
 import { calculateMidpoint, calculateDistance } from "@/lib/map-utils";
 import type { PointOfInterest } from "@shared/schema";
 
@@ -110,9 +111,10 @@ export default function Home() {
       />
       <div className="container mx-auto p-4 space-y-6 relative">
         <header className="text-center py-12 relative">
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-xl"></div>
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm rounded-xl"></div>
           <div className="relative">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent mb-4 animate-fade-in">
+            <CarCollision />
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent mb-4">
               Meet In The Middle
             </h1>
             <p className="text-lg text-muted-foreground">
