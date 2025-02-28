@@ -33,30 +33,6 @@ export default function Home() {
     }
   };
 
-  const handleMapClick = async (lat: number, lon: number) => {
-    if (pinMode === null) return;
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-      );
-      const data = await response.json();
-
-      handleLocationSelect({
-        lat,
-        lon,
-        name: data.display_name || `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
-      }, pinMode);
-    } catch (error) {
-      console.error("Failed to reverse geocode:", error);
-      handleLocationSelect({
-        lat,
-        lon,
-        name: `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
-      }, pinMode);
-    }
-  };
-
   const fetchPOIs = async (lat: number, lon: number) => {
     try {
       // Fetch POIs using Overpass API
@@ -105,6 +81,30 @@ export default function Home() {
     }
   };
 
+  const handleMapClick = async (lat: number, lon: number) => {
+    if (pinMode === null) return;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+      const data = await response.json();
+
+      handleLocationSelect({
+        lat,
+        lon,
+        name: data.display_name || `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
+      }, pinMode);
+    } catch (error) {
+      console.error("Failed to reverse geocode:", error);
+      handleLocationSelect({
+        lat,
+        lon,
+        name: `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
+      }, pinMode);
+    }
+  };
+
   function getCategoryFromTags(tags: any): string {
     if (tags.amenity === 'restaurant' || tags.amenity === 'fast_food') return 'Restaurant';
     if (tags.amenity === 'cafe') return 'Cafe';
@@ -122,8 +122,14 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4 space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5">
+      <div 
+        className="absolute inset-0 bg-grid-primary/5 bg-[size:20px_20px] [mask-image:linear-gradient(to_bottom,white,transparent)]"
+        style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='20' height='20' fill='none' stroke='currentColor' stroke-width='0.5'/%3E%3C/svg%3E")` 
+        }}
+      />
+      <div className="container mx-auto p-4 space-y-6 relative">
         <header className="text-center py-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-3">
             Meet In The Middle
@@ -157,7 +163,7 @@ export default function Home() {
           </div>
 
           <div className="lg:col-span-2 lg:order-2">
-            <div className="bg-card rounded-lg shadow-2xl overflow-hidden border border-border/50">
+            <div className="bg-card rounded-lg shadow-2xl overflow-hidden border border-border/50 backdrop-blur-sm">
               <MapView
                 locations={locations}
                 midpoint={midpoint}
