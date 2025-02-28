@@ -1,11 +1,15 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+const port = 5000;
+const host = "127.0.0.1"; // Force IPv4 to avoid IPv6 issues
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Middleware for logging API responses
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -37,30 +41,32 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Global error handler
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      res.status(status).json({ message });
+      log(`Error: ${message}`, "error");
+    });
 
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Development mode: Setup Vite
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Start the server
+    server.listen(port, host, () => {
+      log(`🚀 Server running at http://${host}:${port}`);
+    });
+
+  } catch (error) {
+    console.error("❌ Server failed to start:", error);
+    process.exit(1);
   }
-
-  const port = 5000;
-  const host = '0.0.0.0'; // Use 0.0.0.0 to allow access
-
-  server.listen({
-    port,
-    host,
-    reusePort: true,
-  }, () => {
-    log(`serving on ${host}:${port}`);
-  });
 })();
