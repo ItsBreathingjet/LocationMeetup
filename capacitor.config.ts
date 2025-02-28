@@ -4,7 +4,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.meetinthemiddle.app',
   appName: 'Meet In The Middle',
-  webDir: 'dist/public',
+  webDir: 'dist',
   server: {
     androidScheme: 'https'
   },
