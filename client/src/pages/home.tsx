@@ -45,6 +45,10 @@ export default function Home() {
     }
   };
 
+  const handleMapClick = async (lat: number, lon: number) => {
+    // Pin mode functionality removed
+  };
+
   const fetchPOIs = async (lat: number, lon: number) => {
     try {
       // Fetch POIs using Overpass API
@@ -93,11 +97,6 @@ export default function Home() {
     }
   };
 
-
-  const handleMapClick = async (lat: number, lon: number) => {
-    // Pin mode functionality removed
-  };
-
   function getCategoryFromTags(tags: any): string {
     if (tags.amenity === 'restaurant' || tags.amenity === 'fast_food') return 'Restaurant';
     if (tags.amenity === 'cafe') return 'Cafe';
@@ -126,45 +125,49 @@ export default function Home() {
         <header className="text-center py-12 relative">
           <div className="absolute inset-0 bg-background/95 backdrop-blur-sm rounded-xl"></div>
           <div className="relative">
-            <CarCollision />
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent">
               Meet In The Middle
             </h1>
+            <CarCollision />
             <p className="text-lg text-muted-foreground">
               Find the perfect meeting spot between two locations
             </p>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-4 lg:order-1">
+        <div className="space-y-6">
+          {/* Map View */}
+          <div className="bg-card rounded-lg shadow-2xl overflow-hidden border border-border/50 backdrop-blur-sm">
+            <MapView
+              locations={locations}
+              midpoint={midpoint}
+              pois={pois}
+              routes={routes ?? undefined}
+            />
+          </div>
+
+          {/* Location Search Boxes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <LocationSearch
               label="Location 1"
               onLocationSelect={(loc) => handleLocationSelect(loc, 0)}
+              selectedLocation={locations[0]}
             />
             <LocationSearch
               label="Location 2"
               onLocationSelect={(loc) => handleLocationSelect(loc, 1)}
+              selectedLocation={locations[1]}
             />
-            {pois.length > 0 && (
-              <PoiList
-                pois={pois}
-                selectedCategory={selectedCategory}
-                onCategorySelect={setSelectedCategory}
-              />
-            )}
           </div>
 
-          <div className="lg:col-span-2 lg:order-2">
-            <div className="bg-card rounded-lg shadow-2xl overflow-hidden border border-border/50 backdrop-blur-sm">
-              <MapView
-                locations={locations}
-                midpoint={midpoint}
-                pois={pois}
-                routes={routes ?? undefined}
-              />
-            </div>
-          </div>
+          {/* Points of Interest */}
+          {pois.length > 0 && (
+            <PoiList
+              pois={pois}
+              selectedCategory={selectedCategory}
+              onCategorySelect={setSelectedCategory}
+            />
+          )}
         </div>
       </div>
     </div>

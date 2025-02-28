@@ -7,9 +7,10 @@ import type { PointOfInterest } from "@shared/schema";
 interface LocationSearchProps {
   onLocationSelect: (location: { lat: number; lon: number; name: string }) => void;
   label: string;
+  selectedLocation?: { lat: number; lon: number; name: string };
 }
 
-export function LocationSearch({ onLocationSelect, label }: LocationSearchProps) {
+export function LocationSearch({ onLocationSelect, label, selectedLocation }: LocationSearchProps) {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +43,13 @@ export function LocationSearch({ onLocationSelect, label }: LocationSearchProps)
   return (
     <Card className="p-4 shadow-lg backdrop-blur-sm bg-white/90 dark:bg-gray-950/90">
       <h3 className="text-lg font-semibold mb-2 text-primary">{label}</h3>
-      <div className="flex gap-2">
+      <div className="space-y-2">
+        {selectedLocation ? (
+          <div className="p-3 bg-accent/10 rounded-lg flex items-center gap-2 mb-2">
+            <MapPin className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-sm truncate">{selectedLocation.name}</span>
+          </div>
+        ) : null}
         <div className="flex-1 relative">
           <Input
             placeholder="Search for a location..."
