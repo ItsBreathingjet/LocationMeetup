@@ -3,7 +3,7 @@ import { LocationSearch } from "@/components/location-search";
 import { MapView } from "@/components/map-view";
 import { PoiList } from "@/components/poi-list";
 import { CarCollision } from "@/components/car-collision";
-import { calculateMidpoint, calculateDistance } from "@/lib/map-utils";
+import { calculateMidpoint, calculateDistance, fetchRoutes } from "@/lib/map-utils";
 import type { PointOfInterest } from "@shared/schema";
 
 export default function Home() {
@@ -11,8 +11,14 @@ export default function Home() {
   const [midpoint, setMidpoint] = useState<{ latitude: number; longitude: number }>();
   const [pois, setPois] = useState<PointOfInterest[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [routes, setRoutes] = useState<Array<{
+    path: [number, number][];
+    duration: number;
+    distance: number;
+    isAlternative: boolean;
+  }> | null>(null);
 
-  const handleLocationSelect = (location: { lat: number; lon: number; name: string }, index?: number) => {
+  const handleLocationSelect = async (location: { lat: number; lon: number; name: string }, index?: number) => {
     const locationIndex = typeof index === 'number' ? index : (locations.length === 2 ? 1 : locations.length);
     const newLocations = [...locations];
     newLocations[locationIndex] = location;
@@ -29,6 +35,13 @@ export default function Home() {
       );
       setMidpoint(mid);
       fetchPOIs(mid.latitude, mid.longitude);
+
+      // Fetch routes between the two locations
+      const routeData = await fetchRoutes(
+        [newLocations[0].lat, newLocations[0].lon],
+        [newLocations[1].lat, newLocations[1].lon]
+      );
+      setRoutes(routeData);
     }
   };
 
@@ -148,7 +161,7 @@ export default function Home() {
                 locations={locations}
                 midpoint={midpoint}
                 pois={pois}
-                onMapClick={handleMapClick}
+                routes={routes ?? undefined}
               />
             </div>
           </div>

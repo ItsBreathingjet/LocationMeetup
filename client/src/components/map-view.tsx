@@ -11,11 +11,18 @@ interface MapViewProps {
     name: string;
     category: string;
   }>;
+  routes?: Array<{
+    path: [number, number][];
+    duration: number;
+    distance: number;
+    isAlternative: boolean;
+  }>;
 }
 
-export function MapView({ locations, midpoint, pois }: MapViewProps) {
+export function MapView({ locations, midpoint, pois, routes }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const routeLayersRef = useRef<L.Polyline[]>([]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -35,14 +42,17 @@ export function MapView({ locations, midpoint, pois }: MapViewProps) {
   useEffect(() => {
     if (!mapRef.current) return;
 
+    // Clear existing markers and routes
     mapRef.current.eachLayer((layer) => {
-      if (layer instanceof L.Marker || layer instanceof L.Circle) {
+      if (layer instanceof L.Marker || layer instanceof L.Circle || layer instanceof L.Polyline) {
         layer.remove();
       }
     });
+    routeLayersRef.current = [];
 
     const bounds = new L.LatLngBounds([]);
 
+    // Add location markers
     locations.forEach((loc, index) => {
       const marker = L.marker([loc.lat, loc.lon], {
         icon: L.divIcon({
@@ -57,6 +67,7 @@ export function MapView({ locations, midpoint, pois }: MapViewProps) {
       bounds.extend([loc.lat, loc.lon]);
     });
 
+    // Add midpoint marker
     if (midpoint) {
       const midpointIcon = L.divIcon({
         className: 'flex items-center justify-center',
@@ -71,6 +82,32 @@ export function MapView({ locations, midpoint, pois }: MapViewProps) {
       bounds.extend([midpoint.latitude, midpoint.longitude]);
     }
 
+    // Add route layers
+    if (routes) {
+      routes.forEach((route, index) => {
+        const routeLayer = L.polyline(route.path, {
+          color: index === 0 ? '#2563eb' : '#64748b',
+          weight: index === 0 ? 5 : 3,
+          opacity: index === 0 ? 1 : 0.7,
+          dashArray: index === 0 ? undefined : '5, 10',
+        })
+          .bindPopup(`
+            <div class="p-2">
+              <div class="font-medium">${index === 0 ? 'Recommended Route' : 'Alternative Route'}</div>
+              <div class="text-sm text-muted-foreground">
+                Distance: ${(route.distance / 1000).toFixed(1)} km<br>
+                Duration: ${Math.round(route.duration / 60)} mins
+              </div>
+            </div>
+          `)
+          .addTo(mapRef.current);
+
+        routeLayersRef.current.push(routeLayer);
+        route.path.forEach(point => bounds.extend(point));
+      });
+    }
+
+    // Add POI markers
     if (pois) {
       pois.forEach((poi) => {
         const poiIcon = L.divIcon({
@@ -102,7 +139,7 @@ export function MapView({ locations, midpoint, pois }: MapViewProps) {
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [locations, midpoint, pois]);
+  }, [locations, midpoint, pois, routes]);
 
   function getCategoryEmoji(category: string): string {
     const emojiMap: Record<string, string> = {

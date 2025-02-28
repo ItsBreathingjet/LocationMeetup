@@ -30,3 +30,26 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 
   return R * c;
 }
+
+export async function fetchRoutes(from: [number, number], to: [number, number]) {
+  try {
+    const response = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?alternatives=true&overview=full&geometries=geojson`
+    );
+    const data = await response.json();
+
+    if (!data.routes || data.routes.length === 0) {
+      throw new Error('No routes found');
+    }
+
+    return data.routes.map((route: any, index: number) => ({
+      path: route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]),
+      duration: route.duration,
+      distance: route.distance,
+      isAlternative: index > 0
+    }));
+  } catch (error) {
+    console.error('Failed to fetch routes:', error);
+    return null;
+  }
+}
