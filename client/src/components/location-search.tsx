@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
 import type { PointOfInterest } from "@shared/schema";
 
 interface LocationSearchProps {
   onLocationSelect: (location: { lat: number; lon: number; name: string }) => void;
-  onPinMode: () => void;
   label: string;
-  isPinMode?: boolean;
 }
 
-export function LocationSearch({ onLocationSelect, onPinMode, label, isPinMode }: LocationSearchProps) {
+export function LocationSearch({ onLocationSelect, label }: LocationSearchProps) {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +45,7 @@ export function LocationSearch({ onLocationSelect, onPinMode, label, isPinMode }
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <Input
-            placeholder="Search or tap map to drop pin..."
+            placeholder="Search for a location..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pr-8"
@@ -59,27 +56,13 @@ export function LocationSearch({ onLocationSelect, onPinMode, label, isPinMode }
             </div>
           )}
         </div>
-        <div className="flex gap-1">
-          <Button 
-            onClick={onPinMode} 
-            variant={isPinMode ? "default" : "outline"} 
-            size="icon"
-            className="shrink-0 relative overflow-hidden"
-          >
-            <MapPin className="h-4 w-4 relative z-10" />
-            {isPinMode && (
-              <div className="absolute inset-0 bg-primary/20 animate-pulse" />
-            )}
-          </Button>
-        </div>
       </div>
       {results.length > 0 && (
         <div className="mt-2 space-y-1 max-h-[200px] overflow-y-auto rounded-lg border bg-card shadow-sm">
           {results.map((result) => (
-            <Button
+            <button
               key={result.place_id}
-              variant="ghost"
-              className="w-full justify-start text-left text-sm py-2 px-3"
+              className="w-full text-left px-3 py-2 hover:bg-accent/5 transition-colors flex items-center gap-2"
               onClick={() => {
                 onLocationSelect({
                   lat: parseFloat(result.lat),
@@ -90,11 +73,9 @@ export function LocationSearch({ onLocationSelect, onPinMode, label, isPinMode }
                 setSearch("");
               }}
             >
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 shrink-0" />
-                <span className="truncate">{result.display_name}</span>
-              </div>
-            </Button>
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate text-sm">{result.display_name}</span>
+            </button>
           ))}
         </div>
       )}

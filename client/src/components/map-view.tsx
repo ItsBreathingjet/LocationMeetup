@@ -11,51 +11,30 @@ interface MapViewProps {
     name: string;
     category: string;
   }>;
-  onMapClick?: (lat: number, lon: number) => void;
-  isPinMode?: boolean;
 }
 
-export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: MapViewProps) {
+export function MapView({ locations, midpoint, pois }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Initialize map
     mapRef.current = L.map(mapContainerRef.current).setView([35.5, -80], 7);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
       mapRef.current
     );
 
-    // Add click handler for pin mode
-    const handleMapClick = (e: L.LeafletMouseEvent) => {
-      if (isPinMode && onMapClick) {
-        onMapClick(e.latlng.lat, e.latlng.lng);
-      }
-    };
-
-    mapRef.current.on('click', handleMapClick);
-
     return () => {
       if (mapRef.current) {
-        mapRef.current.off('click', handleMapClick);
         mapRef.current.remove();
       }
     };
   }, []);
 
-  // Update cursor style based on pin mode
-  useEffect(() => {
-    if (!mapRef.current) return;
-    mapRef.current.getContainer().style.cursor = isPinMode ? 'crosshair' : '';
-  }, [isPinMode]);
-
-  // Update markers and bounds
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Clear existing markers
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.Circle) {
         layer.remove();
@@ -64,7 +43,6 @@ export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: Ma
 
     const bounds = new L.LatLngBounds([]);
 
-    // Add location markers
     locations.forEach((loc, index) => {
       const marker = L.marker([loc.lat, loc.lon], {
         icon: L.divIcon({
@@ -79,7 +57,6 @@ export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: Ma
       bounds.extend([loc.lat, loc.lon]);
     });
 
-    // Add midpoint marker
     if (midpoint) {
       const midpointIcon = L.divIcon({
         className: 'flex items-center justify-center',
@@ -94,7 +71,6 @@ export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: Ma
       bounds.extend([midpoint.latitude, midpoint.longitude]);
     }
 
-    // Add POI markers
     if (pois) {
       pois.forEach((poi) => {
         const poiIcon = L.divIcon({
@@ -123,13 +99,11 @@ export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: Ma
       });
     }
 
-    // Fit bounds with padding
     if (bounds.isValid()) {
       mapRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [locations, midpoint, pois]);
 
-  // Helper function to get emoji based on category
   function getCategoryEmoji(category: string): string {
     const emojiMap: Record<string, string> = {
       'Restaurant': '🍽️',
@@ -149,11 +123,6 @@ export function MapView({ locations, midpoint, pois, onMapClick, isPinMode }: Ma
   return (
     <div className="rounded-lg overflow-hidden shadow-xl">
       <div ref={mapContainerRef} className="w-full h-[50vh] lg:h-[70vh]" />
-      {isPinMode && (
-        <div className="bg-primary/10 text-primary font-medium text-sm p-3 text-center border-t border-primary/20">
-          Click anywhere on the map to drop a pin for your location
-        </div>
-      )}
     </div>
   );
 }

@@ -10,7 +10,6 @@ export default function Home() {
   const [midpoint, setMidpoint] = useState<{ latitude: number; longitude: number }>();
   const [pois, setPois] = useState<PointOfInterest[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [pinMode, setPinMode] = useState<number | null>(null);
 
   const handleLocationSelect = (location: { lat: number; lon: number; name: string }, index?: number) => {
     const locationIndex = typeof index === 'number' ? index : (locations.length === 2 ? 1 : locations.length);
@@ -19,7 +18,6 @@ export default function Home() {
     if (newLocations.length > 2) newLocations.length = 2;
 
     setLocations(newLocations);
-    setPinMode(null);
 
     if (newLocations.length === 2) {
       const mid = calculateMidpoint(
@@ -81,28 +79,9 @@ export default function Home() {
     }
   };
 
+
   const handleMapClick = async (lat: number, lon: number) => {
-    if (pinMode === null) return;
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-      );
-      const data = await response.json();
-
-      handleLocationSelect({
-        lat,
-        lon,
-        name: data.display_name || `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
-      }, pinMode);
-    } catch (error) {
-      console.error("Failed to reverse geocode:", error);
-      handleLocationSelect({
-        lat,
-        lon,
-        name: `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`
-      }, pinMode);
-    }
+    // Pin mode functionality removed
   };
 
   function getCategoryFromTags(tags: any): string {
@@ -130,13 +109,16 @@ export default function Home() {
         }}
       />
       <div className="container mx-auto p-4 space-y-6 relative">
-        <header className="text-center py-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent mb-3">
-            Meet In The Middle
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Find the perfect meeting spot between two locations
-          </p>
+        <header className="text-center py-12 relative">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-xl"></div>
+          <div className="relative">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-transparent mb-4 animate-fade-in">
+              Meet In The Middle
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Find the perfect meeting spot between two locations
+            </p>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -144,14 +126,10 @@ export default function Home() {
             <LocationSearch
               label="Location 1"
               onLocationSelect={(loc) => handleLocationSelect(loc, 0)}
-              onPinMode={() => setPinMode(0)}
-              isPinMode={pinMode === 0}
             />
             <LocationSearch
               label="Location 2"
               onLocationSelect={(loc) => handleLocationSelect(loc, 1)}
-              onPinMode={() => setPinMode(1)}
-              isPinMode={pinMode === 1}
             />
             {pois.length > 0 && (
               <PoiList
@@ -169,7 +147,6 @@ export default function Home() {
                 midpoint={midpoint}
                 pois={pois}
                 onMapClick={handleMapClick}
-                isPinMode={pinMode !== null}
               />
             </div>
           </div>
