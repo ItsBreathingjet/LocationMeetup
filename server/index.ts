@@ -1,15 +1,11 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-const port = 5000;
-const host = "127.0.0.1"; // Force IPv4 to avoid IPv6 issues
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Middleware for logging API responses
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -41,32 +37,33 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  try {
-    const server = await registerRoutes(app);
+  const server = await registerRoutes(app);
 
-    // Global error handler
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-      res.status(status).json({ message });
-      log(`Error: ${message}`, "error");
-    });
+    res.status(status).json({ message });
+    throw err;
+  });
 
-    // Development mode: Setup Vite
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    // Start the server
-    server.listen(port, host, () => {
-      log(`🚀 Server running at http://${host}:${port}`);
-    });
-
-  } catch (error) {
-    console.error("❌ Server failed to start:", error);
-    process.exit(1);
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
   }
+
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client
+  const port = 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+  });
 })();
